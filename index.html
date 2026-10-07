@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Friendship Alias</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef2fb;--card:#fff;--tx:#1b1f3b;--mu:#6a7090;--b:#d9def0;--t0:#d6246e;--t1:#0a8f8f;--word:#ffc933;--ok:#1f9d5c;--bad:#c93a3a;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14172b;--card:#1f2340;--tx:#f1f2fb;--mu:#a2a8cc;--b:#33385e;--t0:#ff5c9a;--t1:#34d1c9}}
+:root[data-theme="dark"]{--bg:#14172b;--card:#1f2340;--tx:#f1f2fb;--mu:#a2a8cc;--b:#33385e;--t0:#ff5c9a;--t1:#34d1c9}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{background:var(--bg);color:var(--tx);font-family:'Fredoka','Trebuchet MS',system-ui,sans-serif;font-size:18px}
+#app{max-width:480px;margin:0 auto;padding:16px;display:flex;flex-direction:column;gap:14px;min-height:100vh}
+h1{font-size:34px;margin:8px 0 0;line-height:1.1}
+h2{font-size:26px;margin:0}
+p{margin:0;color:var(--mu)}
+label{display:flex;flex-direction:column;gap:6px;font-weight:600;font-size:16px}
+input{font:inherit;padding:12px 14px;border-radius:12px;border:2px solid var(--b);background:var(--card);color:var(--tx);width:100%}
+input:focus-visible,button:focus-visible{outline:3px solid var(--word);outline-offset:2px}
+.row{display:flex;gap:12px}.row>*{flex:1}
+.panel{background:var(--card);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:14px;border:2px solid var(--b)}
+button{font:inherit;font-weight:700;font-size:20px;border:0;border-radius:16px;padding:16px;color:#fff;background:var(--tx);cursor:pointer}
+button.ghost{background:transparent;color:var(--mu);border:2px solid var(--b)}
+button.ok{background:var(--ok)}button.skip{background:var(--bad)}
+button.c0{background:var(--t0)}button.c1{background:var(--t1);color:#10162e}
+.bd{display:flex;gap:10px}
+.tm{flex:1;border-radius:16px;padding:10px 12px;background:var(--card);border:3px solid var(--b)}
+.tm.t0.on{border-color:var(--t0)}.tm.t1.on{border-color:var(--t1)}
+.tm .n{font-size:15px;font-weight:600;color:var(--mu);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tm .sc{font-size:34px;font-weight:700;line-height:1.1}
+.tm.t0 .sc{color:var(--t0)}.tm.t1 .sc{color:var(--t1)}
+.tm small{font-size:16px;color:var(--mu);font-weight:400}
+.timer{font-size:56px;font-weight:700;text-align:center;line-height:1}
+.timer.low{color:var(--bad)}
+.word{background:var(--word);color:#1b1f3b;border-radius:24px;padding:36px 16px;text-align:center;font-size:40px;font-weight:700;line-height:1.15;min-height:190px;display:flex;align-items:center;justify-content:center;overflow-wrap:anywhere}
+.big{font-size:64px;font-weight:700;text-align:center;line-height:1}
+.grow{flex:1}
+.rules{font-size:15px}
+</style></head>
+<body><div id="app"></div>
+<script>
+const WORDS=["spark","good listener","organizer","funny friend","quiet friend","acquaintance","neighbor","colleague","roommate","best friend","old friend","toxic friend","close friend","childhood friend","trust","loneliness","jealousy","honesty","respect","surprise","red flag","green flag","easygoing","supportive","reliable","talkative","busy schedule","work-life balance","long distance","family dinner","day off","bad habit","small talk","gossip","secret","advice","compliment","apology","argument","drama","group chat","voice message","funny meme","birthday party","wedding","reunion","invitation","night out","weekend trip","coffee break","favor","keep in touch","hang out","make plans","cancel plans","share a secret","give advice","send a meme","miss someone","break a promise"];
+const A=document.getElementById('app');
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let G={names:['Team 1','Team 2'],target:40,secs:60,score:[0,0],turn:0,deck:[],word:'',got:0,timer:null,end:0,ac:null};
+const team=()=>G.turn%2;
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a}
+function nextWord(){if(!G.deck.length)G.deck=shuffle(WORDS.slice());G.word=G.deck.pop()}
+function board(){return '<div class="bd">'+[0,1].map(i=>`<div class="tm t${i}${team()===i?' on':''}"><div class="n">${esc(G.names[i])}</div><div class="sc">${G.score[i]}<small> / ${G.target}</small></div></div>`).join('')+'</div>'}
+
+function setup(){
+A.innerHTML=`<h1>Friendship Alias</h1><p>Explain the word without saying it. Your team guesses.</p>
+<div class="panel">
+<div class="row"><label>Team 1<input id="n0" value="${esc(G.names[0])}" maxlength="16"></label><label>Team 2<input id="n1" value="${esc(G.names[1])}" maxlength="16"></label></div>
+<div class="row"><label>Words to win<input id="tg" type="number" inputmode="numeric" min="5" max="100" value="${G.target}"></label><label>Seconds per turn<input id="sc" type="number" inputmode="numeric" min="10" max="300" value="${G.secs}"></label></div>
+<p class="rules">Teams take turns. One player explains for one turn. Do not say the word, or any word from it. First team to reach the target wins at the end of the round.</p>
+</div><button onclick="begin()">Start game</button>`}
+function begin(){
+const v=(id,d,lo,hi)=>Math.min(hi,Math.max(lo,parseInt(document.getElementById(id).value)||d));
+G.names=[document.getElementById('n0').value.trim()||'Team 1',document.getElementById('n1').value.trim()||'Team 2'];
+G.target=v('tg',40,5,100);G.secs=v('sc',60,10,300);
+G.score=[0,0];G.turn=0;G.deck=shuffle(WORDS.slice());
+try{G.ac=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}
+ready()}
+function ready(){
+const t=team();
+A.innerHTML=board()+`<div class="grow"></div><h2 style="text-align:center;color:var(--t${t})">${esc(G.names[t])}</h2><p style="text-align:center">Choose one explainer. Only they look at the screen.</p><div class="grow"></div><button class="c${t}" onclick="startTurn()">Start ${G.secs} seconds</button>`}
+function startTurn(){
+G.got=0;nextWord();G.end=Date.now()+G.secs*1000;
+try{G.ac&&G.ac.resume()}catch(e){}
+play();clearInterval(G.timer);G.timer=setInterval(tick,200)}
+function play(){
+const left=Math.max(0,Math.ceil((G.end-Date.now())/1000));
+A.innerHTML=board()+`<div id="tm" class="timer${left<=10?' low':''}">${left}</div><div class="word">${esc(G.word)}</div><div class="grow"></div><div class="row"><button class="skip" onclick="skip()">Skip</button><button class="ok" onclick="correct()">Correct</button></div>`}
+function tick(){
+const left=Math.max(0,Math.ceil((G.end-Date.now())/1000));
+const el=document.getElementById('tm');
+if(el){el.textContent=left;el.classList.toggle('low',left<=10)}
+if(left<=0)endTurn()}
+function correct(){G.score[team()]++;G.got++;nextWord();play()}
+function skip(){nextWord();play()}
+function beep(){
+try{const a=G.ac;const o=a.createOscillator();o.frequency.value=660;o.connect(a.destination);o.start();setTimeout(()=>o.stop(),450)}catch(e){}
+try{navigator.vibrate&&navigator.vibrate(300)}catch(e){}}
+function endTurn(){
+clearInterval(G.timer);beep();
+const t=team(),got=G.got;G.turn++;
+if(G.turn%2===0&&Math.max(...G.score)>=G.target&&G.score[0]!==G.score[1])return final();
+const n=team();
+A.innerHTML=board().replace(/ on"/g,'"')+`<div class="grow"></div><h2 style="text-align:center">Time is up!</h2><div class="big" style="color:var(--t${t})">+${got}</div><p style="text-align:center">${esc(G.names[t])} explained ${got} word${got===1?'':'s'}.</p>${G.turn%2===0&&Math.max(...G.score)>=G.target?'<p style="text-align:center">It is a tie. One more round!</p>':''}<div class="grow"></div><button class="c${n}" onclick="ready()">Next: ${esc(G.names[n])}</button>`}
+function final(){
+const w=G.score[0]>G.score[1]?0:1;
+A.innerHTML=`<div class="grow"></div><p style="text-align:center">The winner is</p><div class="big" style="color:var(--t${w})">${esc(G.names[w])}</div><p style="text-align:center">${G.score[0]} : ${G.score[1]}</p>${board().replace(/ on"/g,'"')}<div class="grow"></div><button onclick="setup()">Play again</button>`}
+setup();
+</script></body></html>
